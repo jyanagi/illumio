@@ -92,12 +92,11 @@ if [[ $selection =~ ^[0-9]+$ && $selection -ge 1 && $selection -le ${#scans[@]} 
 	current_labels=$(curl -s -k -X GET https://$pce_url/api/v2$workloads -u $ilo_api:$ilo_secret | jq '. | .labels | map({ href: .href})')
 	
         # Append new 'Risky' Label to JSON Body
-	new_entry='{"href":'$label'}'
-	updated_array=$(echo "$current_labels" | jq --argjson new_entry "$new_entry" '. += [$new_entry]')
-	wrapped_array=$(echo "$updated_array" | jq '{ "labels": . }')
+        new_entry='{"href":'$label'}'
+        updated_labels=$(echo "$current_labels" | jq --argjson new_entry "$new_entry" '. += [$new_entry] | { "labels": .}')
 	
         # Update workload with new Label
-	curl -s -k -X PUT https://$pce_url/api/v2$workloads -u $ilo_api:$ilo_secret -H "Content-Type: application/json" -d "$wrapped_array"
+	curl -s -k -X PUT https://$pce_url/api/v2$workloads -u $ilo_api:$ilo_secret -H "Content-Type: application/json" -d "$updated_labels"
 	echo "Applying 'Risky' label to workload: $display_name"
 
     done
