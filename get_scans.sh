@@ -103,6 +103,7 @@ if [[ $selection =~ ^[0-9]+$ && $selection -ge 1 && $selection -le ${#scans[@]} 
 
         # Update workload with new Label
         curl -s -k -X PUT https://$pce_url/api/v2$workloads -u $ilo_api:$ilo_secret -H "Content-Type: application/json" -d "$updated_array"
+        echo "CVE with Known Ransomware Campaign Use identified ($cve) on workload '$display_name'"
         echo "Applying 'Risky' label to workload: $display_name"
 
     done
