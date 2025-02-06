@@ -1,12 +1,15 @@
 #!/bin/bash
 
 # Use External Credentials File
+
 source .credentials
 
 # Clear Screen
+
 clear
 
 # Download CISA Known Exploited Vulnerabilities Database
+
 wget -N https://www.cisa.gov/sites/default/files/csv/known_exploited_vulnerabilities.csv
 
 # Create New Label Dimension labeled "High Risk"
@@ -56,7 +59,7 @@ else
 
 fi
 
-# List Scans. @text converts to string
+# List Scans
 
 readarray -t scans < <(curl -s -k -X GET "https://$nessus_url/scans" \
 	-H "X-ApiKeys: accessKey=$access_key; secretKey=$secret_key" \
@@ -70,7 +73,9 @@ echo "-----------------------------------------------------------------------"
 echo " Select the Nessus Scan you would like to parse:                       "
 echo "-----------------------------------------------------------------------"
 echo ""
+
 # Print Array as Itemized/Numbered List
+
 for i in "${!scans[@]}"; do
 	echo "$((i+1)). ${scans[i]}"
 done
@@ -95,8 +100,6 @@ if [[ $selection =~ ^[0-9]+$ && $selection -ge 1 && $selection -le ${#scans[@]} 
 
 	# Generate a Report
 
-#: << 'Generate_Report'
-
 	file_id=$(
 	curl -s -k -X POST https://$nessus_url/scans/$scan_id/export \
 		-H "X-ApiKeys: accessKey=$access_key; secretKey=$secret_key" \
@@ -108,13 +111,9 @@ if [[ $selection =~ ^[0-9]+$ && $selection -ge 1 && $selection -le ${#scans[@]} 
 
 	echo -e "\e[1;33mGenerating Vulnerability Report (File ID: $file_id)...\e[0m"
 
-#Generate_Report
-
 # Check Status of the Report
 
 while true; do
-
-#: << 'Scan_File'
 
 	status=$(
 	curl -s -k -X GET https://$nessus_url/scans/$scan_id/export/$file_id/status \
@@ -124,13 +123,8 @@ while true; do
 	
 	echo -e "\e[1;34mReport Generation Status: $status\e[0m"
 
-#Scan_File
-
-
 	if [[ "$status" == "ready" ]]; then
 		echo -e "\e[1;33mNessus Scan Export is ready! Downloading report...\e[0m"
-
-#: << 'Scan_Report'
 
 		curl -s -k -X GET https://$nessus_url/scans/$scan_id/export/$file_id/download \
 			-H "X-ApiKeys: accessKey=$access_key; secretKey=$secret_key" \
@@ -138,8 +132,6 @@ while true; do
 			-o report.csv 
 
 		echo -e "\e[1;32mReport Download Complete!\e[0m"
-
-#Scan_Report
 
 		break
 	fi
@@ -270,7 +262,7 @@ else
 
 fi
 
-#Perform Cleanup
+# Perform Cleanup
 rm -rf report.csv
 rm -rf cve_host_mapping.json
 rm -rf known_exploited_vulnerabilities.csv
