@@ -110,6 +110,26 @@ containerRuntime: $RUNTIME # supported values: [containerd (default), docker, cr
 containerManager: $MANAGER # supported values: [kubernetes, openshift]
 networkType: $NETWORKTYPE  # CNI type, allowed values are [overlay, flat]
 $CLUSTER_MODE
+
+# Uncomment if using Private CA
+# Must create a configmap labeled 'private-ca' referencing the private CA certificate
+# Example:  kubectl -n illumio-system create configmap private-ca --from-file=private-ca.crt
+#extraVolumes:
+#  - name: private-ca
+#    configMap:
+#      name: private-ca
+#extraVolumeMounts:
+#  - name: private-ca
+#    mountPath: /etc/pki/tls/ilo_certs/
+#    readOnly: false
+#ignore_cert: true
+
+storage:
+  registry: "docker.io/bitnami"
+  repo: "etcd"
+  imageTag: "3.5.7"
+  imagePullPolicy: "IfNotPresent"
+  sizeGi: 1
 EOF
 
 
