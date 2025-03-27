@@ -6,25 +6,6 @@ terraform {
   }
 }
 
-/*
-variable "pce_url" {
-  default      = "https://illumio.de.mo:8443"
-  description  = "URL of the Illumio Policy Compute Engine and Web Socket (i.e., https://illumio.acme.com:8443)"
-}
-
-variable "pce_org_id" {
-  default      = "2"
-}
-
-variable "pce_api_key" {
-  default      = "api_16b104ab1a1057363"
-}
-
-variable "pce_api_secret" {
-  default      = "9bc7ddeaf198d317c1e58791e3ceb79e83dd7d82dd40a5b3ba523395f1ccb037"
-}
-*/
-
 provider "illumio-core" {
   pce_host     = var.pce_url
   api_username = var.pce_api_key
