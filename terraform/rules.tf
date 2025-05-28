@@ -221,6 +221,34 @@ resource "illumio-core_security_rule" "tf_k8s_rule7" {
 
 }
 
+resource "illumio-core_security_rule" "tf_k8s_rule8" {
+  rule_set_href = illumio-core_rule_set.tf_k8s_ruleset.href
+
+  enabled = true
+
+  resolve_labels_as {
+    consumers = ["workloads"]
+    providers = ["workloads"]
+  }
+
+  consumers {
+    label {
+      href = illumio-core_label.role_redis_follower.href
+    }
+  }
+
+  providers {
+    ip_list {
+      href = illumio-core_ip_list.tf_ipl_k8s_svc_nets.href
+    }
+  }
+
+  ingress_services {
+    href = illumio-core_service.tf_svc_redis.href
+  }
+
+}
+
 ## K8s Core Services Rulesets
 
 resource "illumio-core_security_rule" "tf_k8s_req_rule0" {
