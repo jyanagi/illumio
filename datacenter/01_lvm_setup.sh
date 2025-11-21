@@ -3,7 +3,11 @@
 # disks as logical volumes to support the Illumio Platform for
 # datacenter (on-prem) deployments.
 #
-# It creates three (3) partitions: /var/log, /var/lib/illumio-pce,
+# For example, a VM template is used to deploy a minimal CentOS VM. 
+# Three additional hard disks are added to this VM deployment and 
+# must be configured.
+#
+# Three (3) partitions are created: /var/log, /var/lib/illumio-pce,
 # and /var/lib/illumio-pce/data/Explorer
 #
 # Because /var/log is already configured in the filesystem, the
