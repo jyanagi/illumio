@@ -785,6 +785,8 @@ summarize_snc() {
   echo "- Process limits:      /etc/systemd/system/illumio-pce.service.d/override.conf"
   echo "- SNC sysctl:          /etc/sysctl.d/99-illumio-snc.conf"
   echo "- nf_conntrack config: /etc/modprobe.d/illumio.conf"
+  echo "- Server certificate:  /var/lib/illumio-pce/cert/server.crt"
+  echo "- Server key:          /var/lib/illumio-pce/cert/server.key"
 }
 
 # --- Main ---
