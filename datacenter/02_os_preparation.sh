@@ -756,6 +756,8 @@ summarize_core() {
   echo "- Process limits:      /etc/systemd/system/illumio-pce.service.d/override.conf"
   echo "- Core sysctl:         /etc/sysctl.d/99-illumio-core.conf"
   echo "- nf_conntrack config: /etc/modprobe.d/illumio.conf"
+  echo "- Server certificate:  /var/lib/illumio-pce/cert/server.crt"
+  echo "- Server key:          /var/lib/illumio-pce/cert/server.key"
 }
 
 summarize_data() {
