@@ -82,6 +82,9 @@ check_supported_os() {
 }
 
 prompt_node_type() {
+  # Fix for terminals that display ^H instead of deleting characters
+  stty erase ^H 2>/dev/null || true
+
   PS3=$'\n''Enter your choice (1-4): '
 
   local options=("core" "data0" "data1" "snc")
@@ -241,6 +244,9 @@ install_required_packages() {
 
 # --- Set System Parameters ---
 set_system_hostnames() {
+  # Fix for terminals that display ^H instead of deleting characters
+  stty erase ^H 2>/dev/null || true
+
   while true; do
     # Prompt for hostname
     read -rp "Enter the hostname for this Illumio Node (e.g., core0.your.domain): " NODE_NAME
