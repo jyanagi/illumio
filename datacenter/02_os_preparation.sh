@@ -456,7 +456,7 @@ configure_firewalld_for_illumio() {
     done
   fi
 
-  if [[ "$NODE_TYPE" == "core" ]]; then
+  if [[ "$NODE_TYPE" == "core" || "$NODE_TYPE" == "snc" ]]; then
     echo "  firewall-cmd --permanent --zone=\"$ZONE\" --add-port=8443/tcp"
     echo "  firewall-cmd --permanent --zone=\"$ZONE\" --add-port=8444/tcp"
   fi
@@ -484,7 +484,7 @@ configure_firewalld_for_illumio() {
     done
   fi
 
-  if [[ "$NODE_TYPE" == "core" ]]; then
+  if [[ "$NODE_TYPE" == "core" || "$NODE_TYPE" == "snc" ]]; then
     echo "Opening core ports 8443 and 8444..."
     firewall-cmd --permanent --zone="$ZONE" --add-port=8443/tcp
     firewall-cmd --permanent --zone="$ZONE" --add-port=8444/tcp
