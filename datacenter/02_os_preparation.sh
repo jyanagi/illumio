@@ -606,7 +606,7 @@ configure_server_certificate() {
     return 0
   fi
 
-  echo ">> Server Certificate Setup for Illumio ${NODE_TYPE} Node"
+  echo ">> Server Certificate Setup for Illumio ${NODE_TYPE^^} Node"
   echo
   read -rp "Are you configuring a server certificate and private key for this node? (Y/N): " confirm
 
