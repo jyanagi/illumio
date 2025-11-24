@@ -1,10 +1,3 @@
-#
-# This script is used to prepare the baseline OS for the installation of
-# the Illumio Breach Containment Platform.
-#
-# It configures the hostname, local host (dns) table, firewalld rules, 
-# configures the private CA certificate and server certificates.
-#
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -293,6 +286,53 @@ set_system_hostnames() {
 }
 
 # --- Create Host Records for Illumio Cluster Members ---
+
+is_valid_ipv4() {
+  local ip="$1"
+  local IFS='.'
+  local octets=()
+
+  # Quick regex check
+  [[ "$ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || return 1
+
+  read -r -a octets <<< "$ip"
+  [[ ${#octets[@]} -eq 4 ]] || return 1
+
+  for o in "${octets[@]}"; do
+    # Numeric and 0–255
+    [[ "$o" =~ ^[0-9]+$ ]] || return 1
+    (( o >= 0 && o <= 255 )) || return 1
+  done
+
+  return 0
+}
+
+is_duplicate_entry() {
+  local ip="$1"
+  local name="$2"
+  local -n _entries_ref="$3"    # pass array by reference
+  local skip_index="${4:- -1}"  # index to ignore (for edits), -1 means no skip
+
+  local idx=0
+  for e in "${_entries_ref[@]}"; do
+    if (( idx != skip_index )); then
+      local e_ip="${e%% *}"
+      local e_name="${e#* }"
+      if [[ "$ip" == "$e_ip" ]]; then
+        echo "Duplicate IP detected: $ip"
+        return 0
+      fi
+      if [[ "$name" == "$e_name" ]]; then
+        echo "Duplicate hostname detected: $name"
+        return 0
+      fi
+    fi
+    ((idx++))
+  done
+
+  return 1  # no duplicate
+}
+
 add_host_records() {
   # Fix for terminals that display ^H instead of deleting characters
   stty erase ^H 2>/dev/null || true
@@ -303,12 +343,32 @@ add_host_records() {
   echo "=== Add /etc/hosts entries for core and data nodes within the Illumio Cluster ==="
   echo
 
+  #
+  # PHASE 1: COLLECT ENTRIES
+  #
   while true; do
     read -rp "Enter IP address (e.g., 10.0.0.1): " ip
     read -rp "Enter hostname (e.g., core0.your.domain): " name
 
+    # Basic emptiness check
     if [[ -z "${ip// }" || -z "${name// }" ]]; then
       echo "IP and hostname cannot be empty. Please try again."
+      echo
+      continue
+    fi
+
+    # IPv4 validation
+    if ! is_valid_ipv4 "$ip"; then
+      echo "Invalid IPv4 address format: $ip"
+      echo "Please enter a valid IPv4 address (e.g., 10.0.0.1)."
+      echo
+      continue
+    fi
+
+    # Duplicate check (IP or hostname)
+    if is_duplicate_entry "$ip" "$name" hosts_entries; then
+      echo "This IP or hostname already exists in the staged list."
+      echo "Please use a unique IP and hostname."
       echo
       continue
     fi
@@ -365,6 +425,109 @@ add_host_records() {
     return 0
   fi
 
+  #
+  # PHASE 2: REVIEW / EDIT / DELETE ENTRIES
+  #
+  while true; do
+    echo "Review staged /etc/hosts entries:"
+    local i=1
+    for entry in "${hosts_entries[@]}"; do
+      printf '  %d) %s\n' "$i" "$entry"
+      ((i++))
+    done
+    echo
+    read -rp "Enter entry number to edit/delete, or press Enter if all entries are correct: " choice
+
+    # Blank input: done reviewing
+    if [[ -z "$choice" ]]; then
+      break
+    fi
+
+    # Validate numeric index
+    if ! [[ "$choice" =~ ^[0-9]+$ ]]; then
+      echo
+      echo "Invalid selection. Please enter a number or press Enter."
+      echo
+      continue
+    fi
+
+    local idx=$((choice - 1))
+    if (( idx < 0 || idx >= ${#hosts_entries[@]} )); then
+      echo
+      echo "Selection out of range. Please choose a valid entry number."
+      echo
+      continue
+    fi
+
+    local current="${hosts_entries[$idx]}"
+    local cur_ip="${current%% *}"
+    local cur_name="${current#* }"
+
+    echo
+    echo "Selected entry $choice: $current"
+    read -rp "[E]dit, [D]elete, or [C]ancel (no change)? " action
+
+    case "${action,,}" in
+      e|edit)
+        echo
+        read -rp "Enter new IP address [$cur_ip]: " ip
+        read -rp "Enter new hostname [$cur_name]: " name
+
+        # Keep old values if user presses Enter
+        [[ -z "${ip// }" ]] && ip="$cur_ip"
+        [[ -z "${name// }" ]] && name="$cur_name"
+
+        # Validate again
+        if ! is_valid_ipv4 "$ip"; then
+          echo
+          echo "Invalid IPv4 address format: $ip"
+          echo "No changes made to this entry."
+          echo
+          continue
+        fi
+
+        # Check duplicates, skipping this index
+        if is_duplicate_entry "$ip" "$name" hosts_entries "$idx"; then
+          echo
+          echo "Duplicate IP or hostname detected. No changes made to this entry."
+          echo
+          continue
+        fi
+
+        if [[ -z "${ip// }" || -z "${name// }" ]]; then
+          echo
+          echo "IP and hostname cannot be empty. No changes made to this entry."
+          echo
+        else
+          hosts_entries[$idx]="$ip $name"
+          echo
+          echo "Entry $choice updated to: ${hosts_entries[$idx]}"
+          echo
+        fi
+        ;;
+      d|delete)
+        echo
+        echo "Deleting entry $choice: $current"
+        unset 'hosts_entries[idx]'
+        # Re-pack array to close gap
+        hosts_entries=("${hosts_entries[@]}")
+        echo
+        if [[ ${#hosts_entries[@]} -eq 0 ]]; then
+          echo "All entries have been deleted. No host records to append."
+          return 0
+        fi
+        ;;
+      c|cancel|*)
+        echo
+        echo "No changes made to entry $choice."
+        echo
+        ;;
+    esac
+  done
+
+  #
+  # PHASE 3: FINAL CONFIRMATION + WRITE TO /etc/hosts
+  #
   echo "Final staged entries that will be appended to /etc/hosts:"
   printf '  %s\n' "${hosts_entries[@]}"
   echo
@@ -601,11 +764,10 @@ configure_private_ca() {
   esac
 }
 
-
 # --- Server Certificate and Private Key Setup (Core/SNC Nodes Only) ---
 
 configure_server_certificate() {
-  # Only applies to core and snc nodes
+  # Only applies to core nodes
   if [[ "${NODE_TYPE:-}" != "core" && "${NODE_TYPE:-}" != "snc" ]]; then
     echo "Server certificate configuration is only required for core nodes or SNC nodes. Skipping."
     echo
