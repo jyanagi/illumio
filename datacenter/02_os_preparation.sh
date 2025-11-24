@@ -594,15 +594,15 @@ configure_private_ca() {
 
 configure_server_certificate() {
   # Only applies to core nodes
-  if [[ "${NODE_TYPE:-}" != "core" ]]; then
-    echo "Server certificate configuration is only required for core nodes. Skipping."
+  if [[ "${NODE_TYPE:-}" != "core" && "${NODE_TYPE:-}" != "snc" ]]; then
+    echo "Server certificate configuration is only required for core nodes or SNC nodes. Skipping."
     echo
     return 0
   fi
 
-  echo ">> Server Certificate Setup for Illumio Core Node"
+  echo ">> Server Certificate Setup for Illumio ${NODE_TYPE} Node"
   echo
-  read -rp "Are you configuring a server certificate and private key for this core node? (Y/N): " confirm
+  read -rp "Are you configuring a server certificate and private key for this node? (Y/N): " confirm
 
   case "${confirm,,}" in
     y|yes)
@@ -729,7 +729,7 @@ configure_server_certificate() {
       echo "Permissions set to 400 on both files."
 
       echo
-      echo "Server certificate and private key successfully installed for the core node."
+      echo "Server certificate and private key successfully installed for the ${NODE_TYPE} node."
       echo
       ;;
 
