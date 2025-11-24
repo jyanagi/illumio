@@ -245,7 +245,7 @@ install_required_packages() {
 # --- Set System Parameters ---
 set_system_hostnames() {
   # Fix for terminals that display ^H instead of deleting characters
-  stty erase ^H 2>/dev/null || true
+  stty erase "$(printf '\b')" 2>/dev/null || true
 
   while true; do
     # Prompt for hostname
