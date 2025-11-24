@@ -2,13 +2,8 @@
 # This script is used to prepare the baseline OS for the installation of
 # the Illumio Breach Containment Platform.
 #
-# It auto-populates the 
-#
-#
-# Because /var/log is already configured in the filesystem, the
-# script creates a new mountpoint /mnt/new_varlog, resyncs all files
-# within the /var/log directory and remounts to avoid any loss of
-# logging data.
+# It configures the hostname, local host (dns) table, firewalld rules, 
+# configures the private CA certificate and server certificates.
 #
 #!/usr/bin/env bash
 set -euo pipefail
