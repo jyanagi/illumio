@@ -1,3 +1,15 @@
+#
+# This script is used to prepare the baseline OS for the installation of
+# the Illumio Breach Containment Platform.
+#
+# It auto-populates the 
+#
+#
+# Because /var/log is already configured in the filesystem, the
+# script creates a new mountpoint /mnt/new_varlog, resyncs all files
+# within the /var/log directory and remounts to avoid any loss of
+# logging data.
+#
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -594,12 +606,11 @@ configure_private_ca() {
   esac
 }
 
-# --- Server Certificate Configuration (Core Nodes Only) ---
 
-# --- Server Certificate and Private Key Setup (Core Nodes Only) ---
+# --- Server Certificate and Private Key Setup (Core/SNC Nodes Only) ---
 
 configure_server_certificate() {
-  # Only applies to core nodes
+  # Only applies to core and snc nodes
   if [[ "${NODE_TYPE:-}" != "core" && "${NODE_TYPE:-}" != "snc" ]]; then
     echo "Server certificate configuration is only required for core nodes or SNC nodes. Skipping."
     echo
